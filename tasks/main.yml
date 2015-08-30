@@ -1,0 +1,2 @@
+- include: check_vars.yml tags=lsyncd-fanout,check
+- include: lsyncd-fanout.yml tags=lsyncd-fanout

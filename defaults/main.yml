@@ -1,0 +1,5 @@
+lsyncd_fanout_delay: 5
+lsyncd_fanout_directories: false
+lsyncd_fanout_max_processes: 5
+lsyncd_fanout_slaves_interface: false
+lsyncd_fanout_slaves_group: false

@@ -1,0 +1,16 @@
+---
+
+dependencies: []
+
+galaxy_info:
+  author: Michel Blanc
+  company: ACME Corp
+  description: lsyncd role with 1-N fanout for M sources
+  license: MIT
+  min_ansible_version: 1.9
+  platforms:
+  - name: Ubuntu
+    versions:
+    - all
+  categories:
+  - filesystem

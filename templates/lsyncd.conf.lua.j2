@@ -1,0 +1,42 @@
+{% set __lsyncd_fanout_slaves = [] -%}
+{% set __lsyncd_fanout_sources = [] -%}
+{% if lsyncd_fanout_directories is iterable %}
+{%   for src in lsyncd_fanout_directories %}
+{%     set _ = __lsyncd_fanout_sources.append(src) %}
+{%   endfor %}
+{% else %}
+{%   set _ = __lsyncd_fanout_sources.append(lsyncd_fanout_directories) %}
+{% endif %}
+
+
+settings {
+   delay        = {{ lsyncd_fanout_delay }},
+   maxProcesses = {{ lsyncd_fanout_max_processes }},
+   statusFile   = "/tmp/lsyncd.status",
+   logfile      = "/var/log/lsyncd.log",
+}
+
+{% for src in __lsyncd_fanout_sources %}
+{% set __lsyncd_fanout_slaves = [] -%}
+{%- for node in groups[lsyncd_fanout_slaves_group] %}
+
+{%-   set _ = __lsyncd_fanout_slaves.append('"' + hostvars[node]['ansible_' + lsyncd_fanout_slaves_interface].ipv4.address + ":" + src + '"') -%}
+{% endfor -%}
+
+-- list is {{ __lsyncd_fanout_slaves|length }} long
+
+targetlist = {
+  {{__lsyncd_fanout_slaves | join(",") }}
+}
+
+for _, server in ipairs(targetlist) do
+  sync {
+    default.rsync,
+    source="{{ src }}",
+    rsync = {
+      rsh = "/usr/bin/ssh -p {{ ssh_port  }} -i /root/.ssh/lsyncd.key -o StrictHostKeyChecking=no",
+    },
+    target=server
+  }
+end
+{% endfor %}
