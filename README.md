@@ -7,13 +7,13 @@ targets, using lsyncd 2.x.
 
 ## Variables
 
-`lsyncd_fanout_delay`: delay between file syncs (default: 5)
-`lsyncd_fanout_directories`: directories to sync (required, default: false, i.e.
+- `lsyncd_fanout_delay`: delay between file syncs (default: 5)
+- `lsyncd_fanout_directories`: directories to sync (required, default: false, i.e.
 none)
-`lsyncd_fanout_max_processes`: max concurrent sync processes (default: 5)
-`lsyncd_fanout_slaves_interface`: what network interface do the slave
+- `lsyncd_fanout_max_processes`: max concurrent sync processes (default: 5)
+- `lsyncd_fanout_slaves_interface`: what network interface do the slave
 use to communicate with me (required, default: false, i.e. none)
-`lsyncd_fanout_slaves_group`: name of group containing slaves to sync (required, default: none)
+- `lsyncd_fanout_slaves_group`: name of group containing slaves to sync (required, default: none)
 
 ## Usage
 
