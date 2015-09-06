@@ -51,7 +51,7 @@
   notify: Restart lsyncd
 
 - name: Checks the number of files to follow
-  shell: "echo $((`find {{ lsyncd_fanout_directory }} | wc -l`*2))"
+  shell: "echo $((`find {{ lsyncd_fanout_directories | join (' ') }} | wc -l`*2))"
   register: __lsyncd_files_count
   when: not __lsyncd_key_exist.stat.exists
 
