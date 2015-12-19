@@ -1,15 +1,18 @@
 - name: Installs lsyncd
   apt: name=lsyncd state=present
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group]
 
 - name: Checks if ssh key is present
   stat: path=/root/.ssh/lsyncd.key
   register: __lsyncd_key_exist
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group]
 
 - name: Create root ssh key if not present
   shell: 'echo -e "y\n" | ssh-keygen -t rsa -P "" -f /tmp/lsyncd.key -C "lsyncd_key"'
   when: not __lsyncd_key_exist.stat.exists
   delegate_to: localhost
   run_once: true
+  always_run: true
   notify: Restart lsyncd
 
 #- name: Fetched newly created key
@@ -19,8 +22,10 @@
   authorized_key:
     user: root
     key: '{{ lookup("file", "/tmp/lsyncd.key.pub")  }}'
-  when: not __lsyncd_key_exist.stat.exists
-  delegate_to: "{{ item  }}"
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group] and 
+    __lsyncd_key_exist is defined and 
+    __lsyncd_key_exist.stat.exists
+  delegate_to: "{{ item }}"
   with_items: groups[lsyncd_fanout_slaves_group]
   notify: Restart lsyncd
 
@@ -29,32 +34,39 @@
     dest: "/root/.ssh/lsyncd.key"
     content: '{{ lookup("file", "/tmp/lsyncd.key") }}'
     mode: 0600
-  when: not __lsyncd_key_exist.stat.exists and inventory_hostname not in groups[lsyncd_fanout_slaves_group]
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group] and 
+    __lsyncd_key_exist is defined and 
+    __lsyncd_key_exist.stat.exists
   notify: Restart lsyncd
 
 - name: Ensures permissions are correct
   file:
     path: /root/.ssh/lsyncd.key
     mode: 0600
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group]
   notify: Restart lsyncd
 
 - name: Creates lsyncd config directory
   file:
     path: /etc/lsyncd
     state: directory
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group]
   notify: Restart lsyncd
 
 - name: Adds lsyncd config
   template:
     src: lsyncd.conf.lua.j2
     dest: /etc/lsyncd/lsyncd.conf.lua
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group]
   notify: Restart lsyncd
 
 - name: Checks the number of files to follow
   shell: "echo $((`find {{ lsyncd_fanout_directories | join (' ') }} | wc -l`*2))"
   register: __lsyncd_files_count
-  when: not __lsyncd_key_exist.stat.exists
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group] and 
+    __lsyncd_key_exist is defined and 
+    __lsyncd_key_exist.stat.exists
 
 - name: Sets sysctl entry
   sysctl: name="fs.inotify.max_user_watches" value={{__lsyncd_files_count.stdout}} sysctl_set=yes state=present reload=yes
-  when: __lsyncd_files_count|changed
+  when: __lsyncd_files_count|changed and inventory_hostname not in groups[lsyncd_fanout_slaves_group]
