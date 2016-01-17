@@ -24,7 +24,7 @@
     key: '{{ lookup("file", "/tmp/lsyncd.key.pub")  }}'
   when: inventory_hostname not in groups[lsyncd_fanout_slaves_group] and 
     __lsyncd_key_exist is defined and 
-    __lsyncd_key_exist.stat.exists
+    not __lsyncd_key_exist.stat.exists
   delegate_to: "{{ item }}"
   with_items: groups[lsyncd_fanout_slaves_group]
   notify: Restart lsyncd
@@ -36,7 +36,7 @@
     mode: 0600
   when: inventory_hostname not in groups[lsyncd_fanout_slaves_group] and 
     __lsyncd_key_exist is defined and 
-    __lsyncd_key_exist.stat.exists
+    not __lsyncd_key_exist.stat.exists
   notify: Restart lsyncd
 
 - name: Ensures permissions are correct
