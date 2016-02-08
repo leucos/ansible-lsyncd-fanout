@@ -9,7 +9,9 @@
 
 - name: Create root ssh key if not present
   shell: 'echo -e "y\n" | ssh-keygen -t rsa -P "" -f /tmp/lsyncd.key -C "lsyncd_key"'
-  when: not __lsyncd_key_exist.stat.exists
+  when: inventory_hostname not in groups[lsyncd_fanout_slaves_group] and 
+    __lsyncd_key_exist is defined and 
+    not __lsyncd_key_exist.stat.exists
   delegate_to: localhost
   run_once: true
   always_run: true
@@ -67,6 +69,11 @@
     __lsyncd_key_exist is defined and 
     __lsyncd_key_exist.stat.exists
 
-- name: Sets sysctl entry
-  sysctl: name="fs.inotify.max_user_watches" value={{__lsyncd_files_count.stdout}} sysctl_set=yes state=present reload=yes
+- name: Show max_user_watches value
+  debug: msg="fs.inotify.max_user_watches will be set to {{ [__lsyncd_files_count.stdout|int, 8192] | max }}"
   when: __lsyncd_files_count|changed and inventory_hostname not in groups[lsyncd_fanout_slaves_group]
+
+- name: Sets sysctl entry
+  sysctl: name="fs.inotify.max_user_watches" value={{ [__lsyncd_files_count.stdout|int, 8192] | max }} sysctl_set=yes state=present reload=yes
+  when: __lsyncd_files_count|changed and inventory_hostname not in groups[lsyncd_fanout_slaves_group]
+
